@@ -1,6 +1,7 @@
 # manda - Seller Onboarding Prototype
 
 **Prototype:** [manda-prototype-shruti2212projects.vercel.app](https://manda-prototype-shruti2212projects.vercel.app)
+
 **Prototype spec:** [manda-prototype-shruti2212projects.vercel.app/manda-seller-onboarding-spec.html](https://manda-prototype-shruti2212projects.vercel.app/manda-seller-onboarding-spec.html)
 **Figma:** [View in Figma](https://www.figma.com/design/vOTd6GfdMz2AdTvMa30qc1/manda---Seller-Onboarding-Screens)
 
