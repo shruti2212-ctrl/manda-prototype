@@ -3,6 +3,7 @@
 **Prototype:** [manda-prototype-shruti2212projects.vercel.app](https://manda-prototype-shruti2212projects.vercel.app)
 
 **Prototype spec:** [manda-prototype-shruti2212projects.vercel.app/manda-seller-onboarding-spec.html](https://manda-prototype-shruti2212projects.vercel.app/manda-seller-onboarding-spec.html)
+
 **Figma:** [View in Figma](https://www.figma.com/design/vOTd6GfdMz2AdTvMa30qc1/manda---Seller-Onboarding-Screens)
 
 A fully interactive prototype for manda by iwoca's seller onboarding journey, the flow a business owner goes through when listing their company for sale on the manda M&A platform.
