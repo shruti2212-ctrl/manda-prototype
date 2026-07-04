@@ -31,7 +31,7 @@ This prototype demonstrates a complete sell-side onboarding experience:
 
 ## Design
 
-Figma design file with key screens: [View in Figma](https://www.figma.com/design/Ft3EIJQECySFvzutJlhkQ0)
+Figma design file with key screens: [View in Figma](https://www.figma.com/design/vOTd6GfdMz2AdTvMa30qc1/manda---Seller-Onboarding-Screens)
 
 ## Running locally
 
