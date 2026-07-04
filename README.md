@@ -32,7 +32,7 @@ This prototype demonstrates a complete sell-side onboarding experience:
 - **Next.js 15** (App Router) with TypeScript
 - **React** client components with useState-driven step navigation
 - **Tailwind CSS** + custom CSS variables for manda brand system
-- **Product Design system** Aesop font family, brand colour palette (Denim, Coral, Ocean), spacing tokens, and component patterns from the internal design system
+- **Product Design system** font family, brand colour palette, spacing tokens, and component patterns from the internal design system
 - Deployed on **Vercel**
 
 ## Running locally
