@@ -6,7 +6,7 @@
 
 **Figma:** [View in Figma](https://www.figma.com/design/vOTd6GfdMz2AdTvMa30qc1/manda---Seller-Onboarding-Screens)
 
-A fully interactive prototype for manda by iwoca's seller onboarding journey. manda is an M&A platform that connects business sellers with vetted buyers, facilitating the end-to-end acquisition process for SMEs. This prototype covers the sell-side onboarding flow, from initial sign-up through eligibility screening, data collection, engagement letter signing, and a dynamic valuation estimate based on sector comparables and EBITDA multiples.
+A fully interactive prototype for manda's seller onboarding journey. manda is an M&A platform that connects business sellers with vetted buyers, facilitating the end-to-end acquisition process for SMEs. This prototype covers the sell-side onboarding flow, from initial sign-up through eligibility screening, data collection, engagement letter signing, and a dynamic valuation estimate based on sector comparables and EBITDA multiples.
 
 ## What it does
 
