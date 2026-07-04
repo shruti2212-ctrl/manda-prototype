@@ -24,15 +24,15 @@ This prototype demonstrates a complete sell-side onboarding experience:
 - **Progressive data collection** - one question per page, reducing cognitive load
 - **Smart confidence model** - valuation spread narrows as more data sources connect (accounting software, open banking)
 - **Sector-based multiples** - EBITDA and revenue multipliers by industry vertical
-- **Existing customer detection** - iwoca lending customers skip steps where data is already available
+- **Existing customer detection** - existing lending customers skip steps where data is already available
 - **Canvas signature** - draw or type your signature on the engagement letter
 
 ## Tech stack
 
 - **Next.js 15** (App Router) with TypeScript
 - **React** client components with useState-driven step navigation
-- **Tailwind CSS** + custom CSS variables for iwoca/manda brand system
-- **Aesop** font family (iwoca brand typeface)
+- **Tailwind CSS** + custom CSS variables for manda brand system
+- **Product Design system** Aesop font family, brand colour palette (Denim, Coral, Ocean), spacing tokens, and component patterns from the internal design system
 - Deployed on **Vercel**
 
 ## Running locally
