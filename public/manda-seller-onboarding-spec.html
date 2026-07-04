@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Manda Seller Onboarding - Product Spec</title>
+<style>
+@font-face { font-family: 'Aesop'; src: local('Aesop'); }
+@font-face { font-family: 'Aesop Light'; src: local('Aesop Light'); }
+* { font-family: 'Aesop Light', 'Aesop', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; margin: 0; padding: 0; box-sizing: border-box; }
+body { max-width: 900px; margin: 0 auto; padding: 40px 24px; color: #08172B; line-height: 1.7; font-size: 15px; background: #FFFFFF; }
+h1 { font-family: 'Aesop', sans-serif; font-size: 28px; margin-bottom: 8px; color: #08172B; font-weight: 700; }
+h2 { font-family: 'Aesop', sans-serif; font-size: 20px; margin-top: 48px; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 2px solid #FB5950; color: #08172B; font-weight: 700; }
+h3 { font-family: 'Aesop', sans-serif; font-size: 16px; margin-top: 24px; margin-bottom: 8px; color: #08172B; font-weight: 700; }
+h4 { font-family: 'Aesop', sans-serif; font-size: 14px; margin-top: 16px; margin-bottom: 6px; font-weight: 700; color: #102F56; }
+p, li { margin-bottom: 8px; }
+ul, ol { padding-left: 24px; }
+table { width: 100%; border-collapse: collapse; margin: 12px 0 24px; font-size: 13px; border: 1px solid #BAD1DE; }
+th, td { border: 1px solid #BAD1DE; padding: 10px 12px; text-align: left; vertical-align: top; }
+th { background: #EEF4F7; font-family: 'Aesop', sans-serif; font-weight: 700; color: #08172B; }
+code { background: #EEF4F7; padding: 2px 6px; border-radius: 4px; font-size: 12px; color: #102F56; }
+.meta { color: #437090; font-size: 13px; margin-bottom: 8px; }
+.decision { background: #EEF4F7; border: 1px solid #BAD1DE; border-radius: 8px; padding: 14px 18px; margin: 16px 0; font-size: 13px; }
+.decision strong { color: #205EAC; }
+.why { background: #FED0CD; border: 1px solid #FDA09B; border-radius: 8px; padding: 14px 18px; margin: 16px 0; font-size: 13px; }
+.formula { background: #EEF4F7; border: 1px solid #BAD1DE; border-radius: 8px; padding: 16px; margin: 16px 0; font-family: monospace; font-size: 13px; }
+</style>
+</head>
+<body>
+
+<h1>Manda Seller Onboarding - Product Spec</h1>
+<div class="meta">
+Owner: Shruti &middot; Last updated: 3 July 2026 &middot; Status: Ready for build<br>
+Prototype: <a href="https://manda-prototype-shruti2212projects.vercel.app">manda-prototype-shruti2212projects.vercel.app</a><br>
+Prototype spec: <a href="https://manda-prototype-shruti2212projects.vercel.app/manda-seller-onboarding-spec.html">manda-prototype-shruti2212projects.vercel.app/manda-seller-onboarding-spec.html</a>
+</div>
+
+<h2 style="margin-top:8px;">1. What This Is</h2>
+
+<p>manda is a platform (operated by iwoca, a UK SMB lender) that connects business sellers with buyers. This spec covers the digital onboarding journey that takes a UK SME owner from first contact to deal-ready status, without requiring deal team involvement until after qualification.</p>
+
+<div class="why">
+<strong>Why digital onboarding is needed:</strong><br><br>
+<strong>Compliance.</strong> manda needs to meet KYC/KYB standards for new-to-iwoca customers (sellers who don't have an existing iwoca lending account). Today there is no digital path to do this.<br><br>
+<strong>Structured data.</strong> Data collected must feed into existing databases. Manual collection via email doesn't produce structured, system-ready data.<br><br>
+<strong>Highest friction stages automated.</strong> KYC/KYB, document collection/verification, and engagement letter signing are where sellers stall and deal team spends most time chasing. These currently account for the biggest pipeline drop-offs (engagement letter: 49% drop, documents: 46% drop).
+</div>
+
+<p><strong>Design principle:</strong> get to deal-ready as fast as possible without manual intervention or losing the seller along the way.</p>
+
+<!-- ============================================================ -->
+<h2>2. Journey Steps</h2>
+
+<p>Each step below is exactly what the prototype implements. The order is fixed  - branching is documented within each step.</p>
+
+<!-- STEP 1 -->
+<h3>Step 1: Email</h3>
+<table>
+<tr><th>Screen</th><td>Email input, single field</td></tr>
+<tr><th>What happens</th><td>Seller enters email. System sends a 6-digit OTP. Seller enters OTP to verify.</td></tr>
+<tr><th>Why</th><td>Email is the session key  - allows resume later without passwords. OTP verifies ownership (prevents someone entering a competitor's email). No passwords to manage.</td></tr>
+<tr><th>Logic</th><td>On verified OTP: check if email exists in <code>LEGAL_ENTITY_EMAIL</code> (iwoca's core customer database). If match → existing customer path. If no match → new customer path.</td></tr>
+<tr><th>Data stored</th><td><code>email</code> (session key)</td></tr>
+</table>
+
+<div class="decision">
+<strong>Existing vs new customer:</strong> The journey is the same for both. The only difference is where pre-filled data comes from (iwoca's lending database vs Companies House) and that existing customers may start with an additional verified source for the confidence model (MCAT - iwoca's Manual Credit Assessment Tool, where analysts manually verify company financials during underwriting) if MCAT data is available for that customer. The split is determined automatically by email match, not a user-facing choice. The toggle in the prototype is for demo purposes only.
+</div>
+
+<!-- STEP 1b/1c -->
+<h3>Step 2: Company Identification</h3>
+<table>
+<tr><th>Screen (existing)</th><td>Company picker  - shows all businesses linked to seller's iwoca account. Seller taps the one they're selling, then confirms revenue range (same dropdown as new customers). Revenue range is seller-declared because iwoca data (MCAT) may be stale for a growing company.</td></tr>
+<tr><th>Screen (new)</th><td>Type-ahead search against Companies House API. On select: show revenue field (select range) + PSC list + DOB confirmation.</td></tr>
+<tr><th>Why (existing)</th><td>Pre-fills everything. Reduces friction to one tap. Shows the seller "we already know you"  - trust signal.</td></tr>
+<tr><th>Why (new)</th><td>Companies House search gives CRN, status, PSC, filings, address, SIC code in one API call. Revenue range needed for eligibility gate (£500k minimum). PSC + DOB = identity verification for v1 (no IDVerse).</td></tr>
+<tr><th>Logic (new)</th><td>
+1. Companies House search → fetch company profile<br>
+2. Show PSCs from Companies House PSC API<br>
+3. Seller selects which PSC they are<br>
+4. If "I'm not listed here" → ineligible (only PSCs can authorise a sale)<br>
+5. If PSC shareholding band &lt; 50% → ineligible (cannot authorise sale of majority voting shares)<br>
+6. If revenue band = "Under £500k" → ineligible<br>
+7. Seller enters full DOB → verified against protected Companies House register
+</td></tr>
+<tr><th>Data stored</th><td><code>company_number</code>, <code>company_name</code>, <code>psc_name</code>, <code>psc_dob</code>, <code>revenue_band</code></td></tr>
+</table>
+
+<div class="decision">
+<strong>Decision: No IDVerse/Onfido for v1.</strong> PSC selection from Companies House + DOB verification + accounting software connect + Declaration of Authority clause in engagement letter is sufficient. IDVerse adds friction that kills conversion. If someone lies about being a PSC, the engagement letter is void under Fraud Act 2006 (section 12 of the letter).
+</div>
+
+<!-- STEP 2 -->
+<h3>Step 3: Eligibility Checks (automated, no seller input)</h3>
+<table>
+<tr><th>Screen</th><td>Loading state: "Checking your company" / "Verifying details on Companies House and running eligibility checks..."</td></tr>
+<tr><th>What happens</th><td>System runs all checks in parallel. Takes ~2 seconds.</td></tr>
+<tr><th>Why</th><td>Fail fast. Don't waste seller's time if they can't proceed. Don't waste deal team's time on ineligible companies.</td></tr>
+</table>
+
+<h4>Eligibility rules (all customers)</h4>
+<table>
+<tr><th>Check</th><th>Source</th><th>Fail = ineligible</th></tr>
+<tr><td>Company in liquidation/administration</td><td>Companies House status + Insolvency Cases table</td><td>Yes</td></tr>
+<tr><td>Overdue filings</td><td>Companies House Filings stream</td><td>Yes</td></tr>
+<tr><td>No accounts ever filed</td><td>Companies House Filings stream</td><td>Yes</td></tr>
+<tr><td>Revenue below £500k</td><td>Seller-declared revenue range (all customers)</td><td>Yes</td></tr>
+</table>
+
+<h4>Additional checks (existing iwoca customers only - sellers with an active lending facility)</h4>
+<table>
+<tr><th>Check</th><th>Source</th><th>Fail = ineligible</th></tr>
+<tr><td>Overdue on iwoca lending facility by >2 days</td><td><code>CUSTOMER_ACCOUNT_LATEST_STATUS.DAYS_OVERDUE</code> (iwoca repayment tracking table)</td><td>Yes</td></tr>
+<tr><td>Active fraud investigation</td><td><code>FRAUD__FRAUD_INVESTIGATION_STATE</code> where status = 0 or 1 (iwoca internal fraud system)</td><td>Yes</td></tr>
+</table>
+
+<div class="decision">
+<strong>Decision: hard block, no override.</strong> These are non-negotiable. The ineligible screen shows the reason and a "Try another company" CTA. No deal team escalation path for ineligibles.
+</div>
+
+<!-- STEP 3 -->
+<h3>Step 4: Eligible  - Celebration</h3>
+<table>
+<tr><th>Screen</th><td>"Your business is eligible for the manda platform." + company name pill + "Let's get you deal-ready" CTA.</td></tr>
+<tr><th>Why</th><td>Creates momentum. The seller has cleared a gate  - they feel invested. Celebrating eligibility creates a micro-commitment: they've passed a filter, which makes the next steps feel earned rather than demanded.</td></tr>
+<tr><th>Logic</th><td>On CTA click → navigate to Personal Details, then Hub.</td></tr>
+</table>
+
+<!-- PERSONAL -->
+<h3>Step 5: Personal Details</h3>
+<table>
+<tr><th>Screen</th><td>Full name (read-only, from PSC register), email (read-only, from step 1), DOB (read-only, from step 2), phone (editable).</td></tr>
+<tr><th>Why</th><td>Shows the seller their identity is verified. Collects phone (needed for deal team contact). Minimal input  - only phone is editable.</td></tr>
+<tr><th>Logic (existing)</th><td>Pre-fill from <code>LEGAL_ENTITY_PERSON</code> (name table) + <code>LEGAL_ENTITY_PHONE</code> (phone table) in iwoca DB.</td></tr>
+<tr><th>Logic (new)</th><td>Name from PSC API. Email from step 1. DOB from step 2. Phone = blank.</td></tr>
+<tr><th>Data stored</th><td><code>full_name</code>, <code>email</code>, <code>dob</code>, <code>phone</code></td></tr>
+</table>
+
+<!-- HUB -->
+<h3>Step 6: Hub (Checklist)</h3>
+<table>
+<tr><th>Screen</th><td>Three items: Business details (~3 min), Documents (Optional, ~5 min), Deal details (~3 min). Completable in any order.</td></tr>
+<tr><th>Why</th><td>Hub-spoke model. Gives seller control over order. Shows progress. "Optional" on documents reduces friction  - seller doesn't feel blocked.</td></tr>
+<tr><th>Logic</th><td>Requires: Business details + Deal details completed. Documents is optional. When both required items are done → auto-navigate to Review.</td></tr>
+</table>
+
+<div class="decision">
+<strong>Decision: Documents marked "Optional".</strong> Statutory accounts are already available from Companies House. Additional documents improve confidence but aren't blocking. They'll be collected before buyer introductions (post-qualification), not before engagement letter.
+</div>
+
+<!-- STEP 5 -->
+<h3>Step 7: Business Details (spoke)</h3>
+<table>
+<tr><th>Fields</th><td>
+Company name (read-only, from CH)<br>
+Sector (read-only, from SIC code or MCAT)<br>
+One-line description (seller input, public)<br>
+Company website (optional, seller input)<br>
+Headcount (seller input, select range)<br>
+Registered address (read-only, from CH)<br>
+Years trading (read-only, from CH incorporation date)<br>
+</td></tr>
+<tr><th>Why each field</th><td>
+<strong>Sector:</strong> Drives valuation multiple selection. Pre-filled to avoid misclassification.<br>
+<strong>Description:</strong> Goes on buyer-facing listing. Can't be pre-filled.<br>
+<strong>Website:</strong> Optional. Gives deal team and buyers instant context on what the company does. Also used for sector classification if SIC code is unmapped.<br>
+<strong>Headcount:</strong> Buyer filter criterion. Range is enough  - exact number comes from PAYE later.<br>
+</td></tr>
+<tr><th>Pre-fill sources</th><td>
+Existing: MCAT industry + CH address + CH incorporation date<br>
+New: SIC description → sector classification + CH address + CH incorporation date
+</td></tr>
+</table>
+
+<!-- STEP 6 -->
+<h3>Step 8: Documents (spoke, optional)</h3>
+<table>
+<tr><th>Screen</th><td>Three sections: Already available, Connect your data, Upload documents.</td></tr>
+<tr><th>Already available</th><td>Statutory accounts (3 years)  - from Companies House. Always shown as done.</td></tr>
+<tr><th>Connect your data</th><td>
+Open Banking: connect for fresh data (or show "Historical data available" for existing customers)<br>
+Accounting software: Xero / FreeAgent / Sage
+</td></tr>
+<tr><th>Upload documents</th><td>
+Aged debtors/creditors (hidden if accounting connected)<br>
+Debt & obligations detail<br>
+Fixed asset register (hidden if accounting connected)<br>
+Budget/forecast<br>
+Revenue breakdown by customer (hidden if accounting connected)
+</td></tr>
+<tr><th>Why this structure</th><td>Shows what's already done (reduces perceived effort). Connect > Upload (one click vs hunting for files). Accounting connect replaces 3 upload items  - visually obvious incentive.</td></tr>
+<tr><th>Logic</th><td>
+<code>accountingSoftwareConnected = true</code> → hide aged debtors, fixed assets, revenue breakdown uploads.<br>
+Each connect/upload adjusts the confidence model (see Valuation section).
+</td></tr>
+</table>
+
+<!-- STEP 7 -->
+<h3>Step 9: Deal Details (spoke)</h3>
+<table>
+<tr><th>Fields</th><td>
+Revenue (pre-filled, editable)<br>
+Reason for selling (dropdown)<br>
+Timeline (dropdown)<br>
+Asking price (empty, required)<br>
+How did you arrive at this price? (dropdown)<br>
+Post-sale involvement (dropdown)
+</td></tr>
+<tr><th>Why each field</th><td>
+<strong>Revenue:</strong> Pre-filled from MCAT/XBRL. Editable with override  - but dropping to Low confidence discourages frivolous edits.<br>
+<strong>Reason for selling:</strong> Deal intelligence. Buyers want to know motivation. "Partner dispute" or "Health" signals urgency.<br>
+<strong>Timeline:</strong> Prioritisation. ASAP sellers get faster deal team response.<br>
+<strong>Asking price:</strong> Empty, not pre-filled. Framed as "What's the minimum you'd accept?"  - anchors low, creates psychological commitment that's hard to backtrack from later.<br>
+<strong>How did you arrive at this price?:</strong> Deal intelligence. Tells the deal team whether the seller has a grounded expectation or needs guidance. No blocking  - "Unsure" sellers benefit most from seeing the valuation estimate.<br>
+<strong>Post-sale involvement:</strong> Matching criterion. Some buyers want a clean break, others want the founder to stay.
+</td></tr>
+<tr><th>Pre-fill</th><td>Revenue from most recent source: MCAT (existing) or XBRL (new). All other fields = seller input.</td></tr>
+</table>
+
+<div class="decision">
+<strong>Decision: EBITDA is never asked.</strong> Most SME owners don't know their EBITDA. It's derived server-side from XBRL (OperatingProfitLoss + Depreciation + Amortisation), MCAT, or accounting software. If unavailable from any source, valuation uses EV/Revenue multiple instead.
+</div>
+
+<div class="decision">
+<strong>Decision: Asking price is required but empty.</strong> Prevents sellers from increasing their price later (a real problem  - one seller recently found out he was popular and increased his asking price, delaying deal closure). "Minimum you'd accept" framing makes it psychologically hard to go above this number later.
+</div>
+
+<!-- STEP 9 -->
+<h3>Step 10: Review</h3>
+<table>
+<tr><th>Screen</th><td>Summary of all submitted data: Company (name, sector, headcount, registered address, website if provided), Financials (revenue), Deal (asking price, timeline, reason).</td></tr>
+<tr><th>Why</th><td>Standard review step. Lets seller catch errors before signing. Creates a sense of finality  - "this is going on record."</td></tr>
+<tr><th>Logic</th><td>On confirm → proceed to Sign.</td></tr>
+</table>
+
+<!-- STEP 10 -->
+<h3>Step 11: Engagement Letter</h3>
+<table>
+<tr><th>Screen</th><td>Scrollable engagement agreement (HTML rendered, not PDF). Sign area below: type name or draw signature. "Adopt signature and sign" button.</td></tr>
+<tr><th>Agreement clauses</th><td>12 sections  - see Section 5 for full breakdown. Key: Services, Fees (tiered success fee), Anti-circumvention (18 months), Confidentiality (3 years), Declaration of Authority (Fraud Act 2006 deterrent).</td></tr>
+<tr><th>Why here (not earlier)</th><td>Two reasons: (1) Reward  - the valuation estimate sits behind the signature. "Sign to unlock your valuation estimate" gives sellers a clear reason to sign now. (2) Legal protection  - manda needs the agreement signed before sharing market intelligence (valuation data, sector multiples). Current funnel sends the letter cold and gets 49% drop because there's no incentive. After 10 minutes of onboarding, the seller has invested effort and wants the payoff.</td></tr>
+<tr><th>Logic</th><td>
+Template is hardcoded (not negotiable in digital onboarding).<br>
+On sign: record <code>signatory_name</code>, <code>signature_image</code> (base64 if drawn), <code>signed_at</code> (timestamp), <code>ip_address</code>.<br>
+After sign → loading screen "Calculating your valuation" → valuation reveal.
+</td></tr>
+<tr><th>Data stored</th><td><code>engagement_letter_signed_at</code>, <code>signatory_name</code>, <code>signature_type</code> (typed/drawn), <code>signature_data</code></td></tr>
+</table>
+
+<!-- STEP 11 -->
+<h3>Step 12: Valuation Estimate</h3>
+<table>
+<tr><th>Screen</th><td>Confetti animation. "Your valuation estimate" heading. Dark card showing Low / Mid / High range. Confidence badge. Disclaimer. "What happens next" box. "Schedule a call" CTA.</td></tr>
+<tr><th>Why</th><td>The reward. In practice, some sellers just want a valuation and aren't ready to sell immediately. Placing it at the end means they complete the full onboarding to get it  - building a relationship with manda even if they don't list today. They stay in the funnel and come back when ready.</td></tr>
+<tr><th>What's shown</th><td>
+Range: £Low  - £Mid  - £High<br>
+Confidence badge (language only: "Medium confidence")<br>
+"Based on comparable transactions in your sector"<br>
+Disclaimer: "This is an indicative estimate only. The final sale price will depend on market conditions, buyer appetite, and the outcome of due diligence."
+</td></tr>
+<tr><th>What's NOT shown</th><td>The multiple used. The formula. The EBITDA figure. The comp set. None of this is revealed to sellers  - keeps methodology opaque, prevents sellers arguing with components.</td></tr>
+</table>
+
+<!-- ============================================================ -->
+<h2>3. MVP Scope</h2>
+
+<h3>3.1 Tech stack</h3>
+<p>New FastAPI service (same stack as CCA [Credit Card Application service]: PostgreSQL + SQLAlchemy + Alembic + FastAPI). Reads from iwoca core Django DB (LEGAL_ENTITY tables, MCAT data) via internal API. Reuses existing patterns for document signing, eligibility, and open banking from the credit card service. Accounting software integrations (Xero/FreeAgent/Sage) are net-new infrastructure - no existing iwoca integration is reusable (see Section 3.2).</p>
+
+<h3>3.2 Components</h3>
+<table>
+<tr><th>Component</th><th>Notes</th></tr>
+<tr><td>Onboarding session state</td><td>Track progress per user. Persist furthest step reached + completion status of each hub item. Enables resume-by-email and re-engagement nudges.</td></tr>
+<tr><td>Eligibility checks</td><td>Orchestration logic combining existing systems: Companies House API (status, filings) + iwoca DB (facility status, fraud state) + seller-declared revenue. No new data sources  - just the decision engine tying them together.</td></tr>
+<tr><td>Accounting software connect</td><td>Xero/FreeAgent/Sage OAuth flows. Pulls P&L + balance sheet for EBITDA derivation. Net-new build - iwoca's existing Xero integration (iwocaPay) is small/unmaintained and lending integrations are being wound down. QuickBooks deprecated May 2026; prior to that, the iwocaPay QBO integration was already broken (Feb 2026 incident: webhook timeouts causing pay links to disappear for hours/days, unresolved after months). Cannot reuse existing flows.</td></tr>
+<tr><td>Open banking connect</td><td>Extend existing iwoca Open Banking infra to manda sellers. Primary: identity verification + proof of active trading. Secondary: revenue corroboration. Same OAuth redirect flow  - seller authenticates with their business bank.</td></tr>
+<tr><td>Engagement letter signing</td><td>HTML doc generation + click-to-accept + signature storage (typed name or drawn, base64 PNG). Full audit trail: timestamp, IP, signatory name.</td></tr>
+<tr><td>Sector list + static multiples table</td><td>Manda's sector list = MCAT's 31 categories (renamed for readability) + any additional sectors where comps data shows distinct multiples. Static lookup table: sector → EV/EBITDA multiple. Manually curated from MarktoMarket, updated quarterly. Automated Comps ETL is Build Next. Includes multi-source classification for non-MCAT customers: classify SIC description, company description, website, and accounting data into manda sectors, then corroboration vote (see Section 6.3).</td></tr>
+<tr><td>Valuation calculation service</td><td>EBITDA derivation from multiple sources + sector multiple lookup + range calculation.</td></tr>
+</table>
+
+<!-- ============================================================ -->
+<h2>4. External Integrations</h2>
+
+<table>
+<tr><th>System</th><th>Purpose</th><th>When called</th></tr>
+<tr><td>Companies House API (search)</td><td>Find company by name/CRN</td><td>Step 2 (new customers)</td></tr>
+<tr><td>Companies House API (profile)</td><td>Status, address, SIC, incorporation date, filings</td><td>Step 3 (eligibility)</td></tr>
+<tr><td>Companies House API (PSC)</td><td>List of Persons with Significant Control</td><td>Step 2 (new customers)</td></tr>
+<tr><td>Companies House (protected register)</td><td>Full DOB verification</td><td>Step 2 (new customers)</td></tr>
+<tr><td>Xero / FreeAgent / Sage</td><td>Connect accounting data</td><td>Documents step</td></tr>
+<tr><td>Open banking provider</td><td>Bank statement data</td><td>Documents step</td></tr>
+<tr><td>iwoca internal (MCAT, fraud, facility status)</td><td>Pre-fill + eligibility for existing customers</td><td>Step 1 (on email match) + Step 3</td></tr>
+<tr><td>HubSpot</td><td>Sync seller record, deal stage transitions</td><td>On every save + on submit</td></tr>
+<tr><td>Comps database (MarktoMarket, Orbis, Valu8, Grata)</td><td>Sector multiples for valuation</td><td>Offline  - quarterly refresh into static lookup table (not called at runtime)</td></tr>
+</table>
+
+<!-- ============================================================ -->
+<h2>5. Engagement Letter</h2>
+
+<p>Full version approved by legal team. 12 sections. Hardcoded template  - not negotiable in digital onboarding. Seller either signs digitally or abandons (caught by re-engagement nudges).</p>
+
+<h3>Sections</h3>
+<table>
+<tr><th>#</th><th>Section</th><th>Key terms</th><th>Product implications</th></tr>
+<tr><td>1</td><td>Services</td><td>Buyer introductions, meeting facilitation, DD coordination, adviser liaison</td><td> -</td></tr>
+<tr><td>2</td><td>Company responsibilities</td><td>Accurate info, prompt updates, indemnify manda for inaccurate data</td><td>Seller bears data liability</td></tr>
+<tr><td>3</td><td>Fees</td><td>Cumulative tiered success fee: 5% first £1M, 4% £1-2M, 3% £2-3M, 2% £3-4M, 1% £4-5M, 0.5% above £5M. Aggregate Consideration includes earn-outs, deferred, non-cash, debt assumption.</td><td>No upfront cost. Example shown in letter (£3M = £120k).</td></tr>
+<tr><td>4</td><td>Anti-circumvention</td><td>18 months per introduction. Applies even after termination, adviser change, or lapsed discussions.</td><td>System must log all introductions with dates.</td></tr>
+<tr><td>5</td><td>Conflicts of interest</td><td>Manda/parent group may act for competitors, lend to buyer/seller, share info across group.</td><td>Enables group cross-sell (e.g. lending to buyer).</td></tr>
+<tr><td>6</td><td>Confidentiality</td><td>3-year obligation. Buyer network + valuation methodologies confidential. Manda retains anonymised data.</td><td>Legal backing for not showing multiples to sellers.</td></tr>
+<tr><td>7</td><td>Data protection</td><td>DPA 2018 + UK GDPR. Seller must read Privacy Policy before signing.</td><td>Privacy Policy link required on sign screen.</td></tr>
+<tr><td>8</td><td>Term & termination</td><td>30 days notice. Manda can terminate immediately for breach. Fees, audit, confidentiality, anti-circumvention survive.</td><td>Low commitment = reduces signing friction.</td></tr>
+<tr><td>9</td><td>Liability & disputes</td><td>All info "as is"  - no warranty. No transaction guaranteed. Liability capped at fees received. 30-day negotiation then expert determination.</td><td>Protects indicative valuation from liability claims.</td></tr>
+<tr><td>10</td><td>Regulations</td><td>Not FSMA-authorised. Statutory exemptions. Seller confirms 50%+ voting share sale.</td><td>50%+ shareholding already verified at step 2 (PSC band from Companies House). Sellers with &lt;50% are blocked before reaching this point.</td></tr>
+<tr><td>11</td><td>Miscellaneous</td><td>No assignment, independent contractors, written amendments, email notices, entire agreement, severability, no third-party rights, E&W law, e-signatures valid.</td><td> -</td></tr>
+<tr><td>12</td><td>Declaration of Authority</td><td>Signatory confirms PSC/director status. False declaration = Fraud Act 2006 offence.</td><td>Replaces formal ID verification for v1. Legal deterrent.</td></tr>
+</table>
+
+<h3>Dynamic fields in the letter</h3>
+<table>
+<tr><th>Placeholder</th><th>Source</th></tr>
+<tr><td>Company name</td><td>From Companies House (step 2)</td></tr>
+<tr><td>Company number</td><td>From Companies House (step 2)</td></tr>
+<tr><td>Registered office address</td><td>From Companies House API</td></tr>
+<tr><td>Director name (signatory)</td><td>From PSC selection (step 2)</td></tr>
+<tr><td>Date</td><td>Auto-filled on signing</td></tr>
+</table>
+
+<h3>Implementation</h3>
+<p>Template is hardcoded HTML (not editable by seller). Dynamic fields injected. Privacy Policy link visible above sign button. Signed state stores: typed name or drawn signature (base64 PNG), timestamp, signatory name, IP address. Implementation: render HTML doc inline (scrollable), click-to-accept, store signed version with full audit trail. Valid under Electronic Communications Act 2000 + UK eIDAS.</p>
+
+<div class="decision">
+<strong>Note:</strong> Section 12 (Declaration of Authority) was added by product, not in legal's original. Pending legal sign-off. Section 10's 50%+ share requirement is enforced at step 2  - sellers with &lt;50% PSC shareholding are blocked before onboarding.
+</div>
+
+<!-- ============================================================ -->
+<h2>6. Valuation Calculation</h2>
+
+<h3>6.1 Formula</h3>
+<div class="formula">
+Mid = EBITDA × Sector EV/EBITDA multiple<br>
+Low = Mid × (1 - spread)<br>
+High = Mid × (1 + spread)<br>
+Where spread = ±20%, ±35%, or ±40% depending on source confidence (see Section 6.5).<br><br>
+If EBITDA unavailable from any source:<br>
+Mid = Revenue × Sector EV/Revenue multiple<br>
+Then same range calculation above.<br><br>
+Output is Enterprise Value (total transaction value). This is what manda's fee is based on (Aggregate Consideration). Debt/equity split is a deal structure question resolved during DD, not at estimate stage.
+</div>
+
+<h3>6.2 EBITDA Derivation</h3>
+<p>EBITDA is never collected from the seller. It's derived from the most recent available source:</p>
+<table>
+<tr><th>Source</th><th>How EBITDA is calculated</th><th>Available for</th></tr>
+<tr><td>Accounting software (Xero/FreeAgent/Sage)</td><td>P&L report: Operating Profit + Depreciation + Amortisation</td><td>Sellers who connect</td></tr>
+<tr><td>MCAT (Manual Credit Assessment)</td><td><code>MCAT_OPERATING_PROFIT + MCAT_DEPRECIATION + MCAT_AMORTISATION</code></td><td>Existing iwoca customers whose financials were analyst-verified during lending underwriting</td></tr>
+<tr><td>Management accounts (uploaded)</td><td>Extracted from P&L in uploaded document</td><td>Sellers who upload</td></tr>
+<tr><td>XBRL (Companies House)</td><td><code>OperatingProfitLoss + TangibleFixedAssetsDepreciationChargedInPeriod + IntangibleFixedAssetsAmortisationChargedInPeriod</code></td><td>All companies filing full accounts</td></tr>
+</table>
+<p>Use whichever is most recent by date. If none available → fall back to EV/Revenue multiple.</p>
+
+<h3>6.3 Sector Classification</h3>
+<p><strong>MCAT available:</strong> Direct match to manda sector (no vote needed). MCAT's 31 categories map near-directly to manda's sector list. The ~6 that don't map cleanly (other, other_business_services, other_domestic_services) default to "Other" with low confidence.</p>
+
+<p><strong>No MCAT:</strong> Corroboration model - classify each source independently into a manda sector, then majority wins.</p>
+
+<table>
+<tr><th>Source</th><th>What it tells you</th><th>Availability</th></tr>
+<tr><td>SIC code description (Companies House)</td><td>What was filed at incorporation/annual return. Often stale.</td><td>Always - from Companies House API</td></tr>
+<tr><td>One-line description</td><td>What the seller says they do right now. Current.</td><td>Always - required field in Business Details</td></tr>
+<tr><td>Company website</td><td>What the business presents to the market. Current.</td><td>Sometimes - optional field</td></tr>
+<tr><td>Accounting software (revenue by category)</td><td>What the business actually makes money from. Objective.</td><td>Build version - sellers who connect</td></tr>
+</table>
+
+<p><strong>Decision logic:</strong> Majority agree → use that sector. Tie → tiebreaker by reliability: accounting > description > website > MCAT > SIC. Only 1 source → use it. No sources produce a mappable sector → default to "Other" with low confidence (widest valuation range ±40%).</p>
+
+<p><strong>Sector list:</strong> MCAT's 31 industry categories (renamed for readability) + any additional sectors where comps data shows materially different multiples. Where multiple SIC codes exist for a company, use the first listed (primary activity).</p>
+
+<h3>6.4 Sector Multiples</h3>
+<p>Sourced from 4,500+ completed UK transactions across 4 databases: MarktoMarket, Orbis, Valu8, Grata. Focus on sub-£10M enterprise value deals.</p>
+
+<table>
+<tr><th>Sector</th><th>EV/EBITDA</th><th>EV/Revenue (fallback)</th></tr>
+<tr><td>Technology & Digital Services</td><td>8.5x</td><td>2.0x</td></tr>
+<tr><td>Software</td><td>10.0x</td><td>3.0x</td></tr>
+<tr><td>IT Services</td><td>7.5x</td><td>1.5x</td></tr>
+<tr><td>Professional Services</td><td>6.5x</td><td>1.0x</td></tr>
+<tr><td>Consulting</td><td>6.0x</td><td>1.0x</td></tr>
+<tr><td>Recruitment</td><td>6.5x</td><td>0.5x</td></tr>
+<tr><td>Legal Services</td><td>8.0x</td><td>1.5x</td></tr>
+<tr><td>Marketing & Media</td><td>7.0x</td><td>0.8x</td></tr>
+<tr><td>Manufacturing</td><td>6.0x</td><td>0.5x</td></tr>
+<tr><td>Food & Beverage Manufacturing</td><td>6.5x</td><td>0.6x</td></tr>
+<tr><td>Electronics Manufacturing</td><td>6.5x</td><td>0.8x</td></tr>
+<tr><td>Healthcare</td><td>7.0x</td><td>1.0x</td></tr>
+<tr><td>Care Homes</td><td>7.0x</td><td>0.8x</td></tr>
+<tr><td>Veterinary</td><td>8.0x</td><td>1.5x</td></tr>
+<tr><td>Pharma & Biotech</td><td>9.0x</td><td>2.0x</td></tr>
+<tr><td>Retail & E-commerce</td><td>5.0x</td><td>0.4x</td></tr>
+<tr><td>Construction & Engineering</td><td>5.0x</td><td>0.3x</td></tr>
+<tr><td>Property Services</td><td>7.0x</td><td>1.0x</td></tr>
+<tr><td>Housebuilding</td><td>4.5x</td><td>0.4x</td></tr>
+<tr><td>Logistics & Distribution</td><td>6.0x</td><td>0.4x</td></tr>
+<tr><td>Transport</td><td>5.5x</td><td>0.4x</td></tr>
+<tr><td>Financial Services</td><td>7.5x</td><td>1.5x</td></tr>
+<tr><td>Insurance Broking</td><td>8.0x</td><td>2.0x</td></tr>
+<tr><td>Fintech</td><td>9.0x</td><td>3.0x</td></tr>
+<tr><td>Education & Training</td><td>7.5x</td><td>1.2x</td></tr>
+<tr><td>Nurseries & Childcare</td><td>8.0x</td><td>1.5x</td></tr>
+<tr><td>Hospitality & Leisure</td><td>6.0x</td><td>0.7x</td></tr>
+<tr><td>Hotels</td><td>7.0x</td><td>1.0x</td></tr>
+<tr><td>Restaurants & Bars</td><td>5.0x</td><td>0.5x</td></tr>
+<tr><td>Energy & Utilities</td><td>7.0x</td><td>1.0x</td></tr>
+<tr><td>Renewables</td><td>8.0x</td><td>1.5x</td></tr>
+<tr><td>Agriculture & Food Production</td><td>6.0x</td><td>0.5x</td></tr>
+<tr><td>Defence & Aerospace</td><td>6.5x</td><td>1.0x</td></tr>
+</table>
+<p>Default (unmapped sector): 6.0x EV/EBITDA, 0.8x EV/Revenue.</p>
+
+<h3>6.5 Valuation Range</h3>
+<p>The range displayed to sellers is driven by <strong>source corroboration</strong>  - how many independent data sources agree on the financials. More sources agreeing = tighter range.</p>
+
+<table>
+<tr><th>Scenario</th><th>Spread</th><th>Language shown</th></tr>
+<tr><td>1+ verified sources</td><td>±20%</td><td>"Medium confidence"</td></tr>
+<tr><td>0 verified sources</td><td>±35%</td><td>"Low to medium confidence"</td></tr>
+<tr><td>Seller has overridden pre-filled values</td><td>±40%</td><td>"Low confidence (self-reported)"</td></tr>
+</table>
+
+<h4>Floor rule</h4>
+<p><strong>The range is never tighter than ±20%</strong>, regardless of how many sources agree. This prevents the estimate looking like a formal valuation. manda is not a valuation firm  - this is an indicative estimate only.</p>
+
+<h4>What counts as a "source"</h4>
+<table>
+<tr><th>Source</th><th>Counts as independent source?</th></tr>
+<tr><td>iwoca MCAT data</td><td>Yes  - but only available for existing customers with analyst-verified financials (not all iwoca customers have MCAT data)</td></tr>
+<tr><td>Accounting software connected</td><td>Yes</td></tr>
+<tr><td>Open banking connected</td><td>Yes  - also serves as identity verification + proof of active trading</td></tr>
+<tr><td>XBRL (Companies House)</td><td>Yes  - but only available for companies filing full accounts (not micro-entities with abbreviated filings)</td></tr>
+<tr><td>Seller override/input</td><td>No  - drops confidence</td></tr>
+<tr><td>Management accounts (uploaded)</td><td>Partial  - counts as 0.5 (seller-prepared, unaudited)</td></tr>
+</table>
+
+<div class="decision">
+<strong>Decision: Range is always wide enough that sellers can't quote it as a formal valuation.</strong> ±20% minimum floor regardless of corroboration. This prevents sellers telling buyers "manda valued my business at £2.5M." The language ("indicative estimate", "comparable transactions") + disclaimer reinforces this.
+</div>
+
+<!-- ============================================================ -->
+<h2>7. HubSpot Sync</h2>
+
+<p>Pipeline: Manda Vendor Pipeline (ID: <code>868581957</code>)</p>
+
+<table>
+<tr><th>Onboarding event</th><th>HubSpot action</th><th>Deal stage</th></tr>
+<tr><td>Seller enters email</td><td>Create/update Contact</td><td>N/A (no deal yet)</td></tr>
+<tr><td>Passes eligibility</td><td>Create Deal</td><td>Interest logged</td></tr>
+<tr><td>Signs engagement letter + valuation shown</td><td>Update Deal + Create Task ("Call within 2 days")</td><td>Engagement letter signed</td></tr>
+<tr><td>Seller clicks "Schedule a call"</td><td>Update Deal</td><td>Meeting booked</td></tr>
+<tr><td>All docs collected + verified</td><td>Update Deal</td><td>Deal-ready</td></tr>
+</table>
+
+
+<!-- ============================================================ -->
+<h2>8. Metrics & Tracking</h2>
+
+<h3>8.1 Success Metrics</h3>
+<p>These are the conversion steps this self-serve journey is designed to improve. Targets are hypotheses for 1 month post-launch.</p>
+<table>
+<tr><th>Metric</th><th>Current</th><th>Target (1 month)</th><th>Why this target</th><th>Derived from events</th></tr>
+<tr><td>Sent → Signed (engagement letter)</td><td>45%</td><td>70%</td><td>Valuation reward behind signature may increase motivation. Seller has already invested ~10 min by this point, which should reduce cold drop-off. Session persists so sellers can return where they left off.</td><td><code>onboarding.engagement_letter_signed</code> / <code>onboarding.started</code></td></tr>
+<tr><td>Signed → Documents collected</td><td>54%</td><td>80%</td><td>One-click accounting connect should reduce effort vs file hunting. Marking documents optional may prevent the "I don't have this" drop-off. Sellers can leave and return to the same step later.</td><td><code>onboarding.documents_uploaded</code> or <code>accounting_connected</code> / <code>onboarding.engagement_letter_signed</code></td></tr>
+<tr><td>Time: Interest logged → Deal-ready</td><td>~4 weeks</td><td>&lt;72 hours</td><td>Removing email back-and-forth and manual scheduling should compress this significantly. Single-session completion becomes possible, and multi-session sellers can resume without starting over.</td><td><code>onboarding.qualified.total_duration_min</code></td></tr>
+</table>
+
+<h3>8.2 Tracking Plan</h3>
+<p>Every step fires an event. Implement as a single <code>track(event, properties)</code> call  - backend decides where events are sent (initially: HubSpot timeline + internal analytics DB).</p>
+
+<table>
+<tr><th>Event</th><th>Fires when</th><th>Properties</th></tr>
+<tr><td><code>onboarding.started</code></td><td>Seller submits email</td><td><code>email</code>, <code>source</code> (referral link / direct / ad campaign UTM)</td></tr>
+<tr><td><code>onboarding.otp_verified</code></td><td>OTP confirmed</td><td><code>email</code>, <code>is_existing_customer</code></td></tr>
+<tr><td><code>onboarding.company_identified</code></td><td>Company selected + confirmed</td><td><code>company_number</code>, <code>company_name</code>, <code>revenue_band</code>, <code>is_existing_customer</code></td></tr>
+<tr><td><code>onboarding.eligibility_checked</code></td><td>Eligibility checks complete</td><td><code>result</code> (eligible/ineligible), <code>fail_reason</code> (if ineligible), <code>duration_ms</code></td></tr>
+<tr><td><code>onboarding.hub_viewed</code></td><td>Seller lands on hub screen</td><td><code>items_completed</code> (0 on first view)</td></tr>
+<tr><td><code>onboarding.business_details_completed</code></td><td>Business details spoke submitted</td><td><code>sector</code>, <code>headcount_band</code>, <code>has_website</code></td></tr>
+<tr><td><code>onboarding.documents_viewed</code></td><td>Documents spoke opened</td><td><code>is_existing_customer</code></td></tr>
+<tr><td><code>onboarding.accounting_connected</code></td><td>OAuth flow completes successfully</td><td><code>provider</code> (xero/freeagent/sage)</td></tr>
+<tr><td><code>onboarding.open_banking_connected</code></td><td>Open banking OAuth completes</td><td><code>provider</code></td></tr>
+<tr><td><code>onboarding.documents_uploaded</code></td><td>File upload confirmed</td><td><code>document_type</code>, <code>file_size_kb</code></td></tr>
+<tr><td><code>onboarding.deal_details_completed</code></td><td>Deal details spoke submitted</td><td><code>timeline</code>, <code>has_asking_price</code>, <code>valuation_basis</code></td></tr>
+<tr><td><code>onboarding.review_viewed</code></td><td>Review screen loaded</td><td><code>time_since_start_min</code></td></tr>
+<tr><td><code>onboarding.engagement_letter_signed</code></td><td>Signature submitted</td><td><code>signature_type</code> (typed/drawn), <code>time_since_start_min</code></td></tr>
+<tr><td><code>onboarding.valuation_shown</code></td><td>Valuation estimate displayed</td><td><code>confidence_level</code>, <code>valuation_mid</code>, <code>sector</code>, <code>multiple_used</code></td></tr>
+<tr><td><code>onboarding.qualified</code></td><td>Seller reaches end state</td><td><code>total_duration_min</code>, <code>sources_connected</code> (count), <code>documents_uploaded</code> (count)</td></tr>
+<tr><td><code>onboarding.abandoned</code></td><td>No activity for 7 days after last event</td><td><code>last_step</code>, <code>time_since_last_activity_days</code></td></tr>
+</table>
+
+<div class="decision">
+<strong>Session resumption tracking:</strong> Every event includes <code>session_id</code> (persistent across visits via email-based resume) and <code>visit_number</code> (how many times the seller has returned). This distinguishes "fast completers" from "multi-session completers" in funnel analysis.
+</div>
+
+<!-- ============================================================ -->
+<h2>9. Build Next</h2>
+
+<p>Ordered by impact on deal conversion and valuation accuracy.</p>
+
+<table>
+<tr><th>#</th><th>Feature</th><th>Why next</th></tr>
+<tr><td>1</td><td>Re-engagement automation (day 3/7/14 nudges)</td><td>Recovers the warmest leads - sellers who started but dropped off. Pipeline data shows 46% drop between signed and documents collected. Immediate pipeline impact. HubSpot sequences already exist - just needs triggering from onboarding state.</td></tr>
+<tr><td>2</td><td>Seller dashboard</td><td>Post-qualification view where sellers can track deal status, see uploaded docs, and check what's still needed before buyer introductions. Reduces "where's my deal?" inbound to deal team and keeps sellers engaged while waiting. Without visibility, sellers go cold.</td></tr>
+<tr><td>3</td><td>Deal team dashboard</td><td>Pipeline view, qualified seller queue, stalling sellers, valuation vs asking price comparison. Deal team can work from raw HubSpot initially but needs a dedicated view once volume picks up.</td></tr>
+<tr><td>4</td><td>Management accounts parsing</td><td>PDF parsing + LLM extraction of P&L figures (operating profit, depreciation, amortisation). Covers sellers who won't connect accounting software but will upload documents. ~2-3 days of work.</td></tr>
+<tr><td>5</td><td>Comps database ETL + quarterly refresh</td><td>Multiples are currently hardcoded from a one-time extract. Market conditions shift - particularly in Tech, Healthcare, and Energy. Quarterly refresh keeps valuations market-accurate.</td></tr>
+<tr><td>6</td><td>Buyer-side onboarding</td><td>Sellers are supply. Buyers are demand. Once seller pipeline is flowing, buyer onboarding (criteria, budget, sector preferences, NDA signing) enables automated matching without deal team manually introducing.</td></tr>
+<tr><td>7</td><td>Automated buyer matching + introductions</td><td>Requires buyer onboarding first. System matches qualified sellers to buyers by sector, size, geography, price range. Deal team approves rather than initiates.</td></tr>
+</table>
+
+<!-- ============================================================ -->
+<h2>10. Glossary</h2>
+
+<p>manda is operated by iwoca, a UK SMB lender. Existing iwoca lending customers get pre-filled data from iwoca's internal systems. These are the iwoca-specific terms used in this spec:</p>
+
+<table>
+<tr><th>Term</th><th>What it is</th></tr>
+<tr><td><code>LEGAL_ENTITY_EMAIL</code></td><td>iwoca database table storing customer email addresses</td></tr>
+<tr><td><code>LEGAL_ENTITY_PERSON</code></td><td>iwoca database table storing customer names</td></tr>
+<tr><td><code>LEGAL_ENTITY_PHONE</code></td><td>iwoca database table storing customer phone numbers</td></tr>
+<tr><td>MCAT (Manual Credit Assessment Tool)</td><td>iwoca's underwriting system where analysts manually verify company financials (revenue, profit, depreciation etc.) during the lending application process</td></tr>
+<tr><td><code>MCAT_OPERATING_PROFIT</code>, <code>MCAT_DEPRECIATION</code>, <code>MCAT_AMORTISATION</code></td><td>Financial fields captured during MCAT underwriting</td></tr>
+<tr><td><code>CUSTOMER_ACCOUNT_LATEST_STATUS</code></td><td>iwoca table tracking repayment status of lending facilities</td></tr>
+<tr><td><code>FRAUD__FRAUD_INVESTIGATION_STATE</code></td><td>iwoca internal fraud investigation tracking system</td></tr>
+<tr><td>iwoca facility</td><td>The loan or credit product iwoca provides to SMBs</td></tr>
+<tr><td>Existing customer</td><td>A seller who already has an iwoca lending account (email match found in iwoca DB)</td></tr>
+<tr><td>New customer</td><td>A seller with no prior iwoca relationship. All data comes from Companies House and seller input.</td></tr>
+<tr><td>XBRL</td><td>eXtensible Business Reporting Language. The structured data format used in statutory accounts filed at Companies House. Contains financial line items (revenue, profit, depreciation etc.)</td></tr>
+<tr><td>PSC</td><td>Person with Significant Control. Companies House register of individuals who own 25%+ shares or voting rights in a company.</td></tr>
+<tr><td>CCA</td><td>Credit Card Application service. iwoca's credit card backend (FastAPI + PostgreSQL + SQLAlchemy). Manda reuses the same tech stack and patterns.</td></tr>
+</table>
+
+</body>
+</html>
